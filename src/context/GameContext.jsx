@@ -1,0 +1,332 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+const GameContext = createContext();
+
+export const useGame = () => {
+  const context = useContext(GameContext);
+  if (!context) {
+    throw new Error('useGame must be used within a GameProvider');
+  }
+  return context;
+};
+
+export const GameProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [userCards, setUserCards] = useState([]);
+  const [userDecks, setUserDecks] = useState([]);
+  const [activeDeck, setActiveDeck] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Initialize user from localStorage on mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem('mythicWarriorsUser');
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+      setIsAuthenticated(true);
+      
+      // Load user cards and decks
+      const storedCards = localStorage.getItem(`cards_${parsedUser.username}`);
+      const storedDecks = localStorage.getItem(`decks_${parsedUser.username}`);
+      
+      if (storedCards) {
+        setUserCards(JSON.parse(storedCards));
+      }
+      if (storedDecks) {
+        const decks = JSON.parse(storedDecks);
+        setUserDecks(decks);
+        const active = decks.find(d => d.isActive);
+        if (active) setActiveDeck(active);
+      }
+    }
+  }, []);
+
+  // Save user to localStorage whenever it changes
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('mythicWarriorsUser', JSON.stringify(user));
+    }
+  }, [user]);
+
+  // Save cards to localStorage
+  useEffect(() => {
+    if (user && userCards.length > 0) {
+      localStorage.setItem(`cards_${user.username}`, JSON.stringify(userCards));
+    }
+  }, [userCards, user]);
+
+  // Save decks to localStorage
+  useEffect(() => {
+    if (user && userDecks.length > 0) {
+      localStorage.setItem(`decks_${user.username}`, JSON.stringify(userDecks));
+    }
+  }, [userDecks, user]);
+
+  const register = (username, email, password) => {
+    // Check if user already exists
+    const existingUser = localStorage.getItem(`user_${username}`);
+    if (existingUser) {
+      return { success: false, message: 'Username already exists' };
+    }
+
+    // Create new user
+    const newUser = {
+      id: Date.now(),
+      username,
+      email,
+      avatar: '🎮',
+      level: 1,
+      experience: 0,
+      gold: 1000,
+      gems: 100,
+      energy: 100,
+      rating: 1000,
+      rank: 'Bronze',
+      stats: {
+        totalBattles: 0,
+        wins: 0,
+        losses: 0,
+        winStreak: 0,
+        bestWinStreak: 0,
+        tournamentsWon: 0,
+        totalGoldEarned: 0,
+        cardsCollected: 0,
+      },
+      clan: null,
+      clanRole: 'Member',
+    };
+
+    // Save user credentials
+    localStorage.setItem(`user_${username}`, JSON.stringify({ username, email, password }));
+
+    setUser(newUser);
+    setIsAuthenticated(true);
+    
+    // Generate starter cards
+    const starterCards = generateStarterCards();
+    setUserCards(starterCards);
+    
+    // Create starter deck
+    const starterDeck = {
+      id: Date.now(),
+      name: 'Starter Deck',
+      cards: starterCards.slice(0, 5),
+      isActive: true,
+      wins: 0,
+      losses: 0,
+      totalPower: starterCards.slice(0, 5).reduce((sum, card) => sum + card.attack + card.defense, 0),
+    };
+    
+    setUserDecks([starterDeck]);
+    setActiveDeck(starterDeck);
+    
+    return { success: true, message: 'Registration successful' };
+  };
+
+  const login = (username, password) => {
+    // Check if user exists
+    const storedUserAuth = localStorage.getItem(`user_${username}`);
+    
+    if (storedUserAuth) {
+      const userAuth = JSON.parse(storedUserAuth);
+      if (userAuth.password !== password) {
+        return false;
+      }
+    }
+
+    // Get or create user data
+    const storedUser = localStorage.getItem('mythicWarriorsUser');
+    let userData;
+
+    if (storedUser) {
+      const parsed = JSON.parse(storedUser);
+      if (parsed.username === username) {
+        userData = parsed;
+      }
+    }
+
+    if (!userData) {
+      // Create new user data for first-time login
+      userData = {
+        id: Date.now(),
+        username,
+        email: `${username}@mythicwarriors.com`,
+        avatar: '🎮',
+        level: 1,
+        experience: 0,
+        gold: 1000,
+        gems: 100,
+        energy: 100,
+        rating: 1000,
+        rank: 'Bronze',
+        stats: {
+          totalBattles: 0,
+          wins: 0,
+          losses: 0,
+          winStreak: 0,
+          bestWinStreak: 0,
+          tournamentsWon: 0,
+          totalGoldEarned: 0,
+          cardsCollected: 0,
+        },
+        clan: null,
+        clanRole: 'Member',
+      };
+    }
+
+    setUser(userData);
+    setIsAuthenticated(true);
+    
+    // Load or generate cards
+    const storedCards = localStorage.getItem(`cards_${username}`);
+    if (storedCards) {
+      setUserCards(JSON.parse(storedCards));
+    } else {
+      const starterCards = generateStarterCards();
+      setUserCards(starterCards);
+    }
+    
+    // Load or create decks
+    const storedDecks = localStorage.getItem(`decks_${username}`);
+    if (storedDecks) {
+      const decks = JSON.parse(storedDecks);
+      setUserDecks(decks);
+      const active = decks.find(d => d.isActive);
+      if (active) setActiveDeck(active);
+    } else {
+      const cards = storedCards ? JSON.parse(storedCards) : generateStarterCards();
+      const starterDeck = {
+        id: Date.now(),
+        name: 'Starter Deck',
+        cards: cards.slice(0, 5),
+        isActive: true,
+        wins: 0,
+        losses: 0,
+        totalPower: cards.slice(0, 5).reduce((sum, card) => sum + card.attack + card.defense, 0),
+      };
+      setUserDecks([starterDeck]);
+      setActiveDeck(starterDeck);
+    }
+    
+    return true;
+  };
+
+  const logout = () => {
+    setUser(null);
+    setUserCards([]);
+    setUserDecks([]);
+    setActiveDeck(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem('mythicWarriorsUser');
+    if (user) {
+      localStorage.removeItem(`cards_${user.username}`);
+      localStorage.removeItem(`decks_${user.username}`);
+    }
+  };
+
+  const updateUser = (updates) => {
+    setUser(prev => ({ ...prev, ...updates }));
+  };
+
+  const updateUserStats = (updates) => {
+    setUser(prev => ({
+      ...prev,
+      ...updates,
+      stats: { ...prev.stats, ...updates.stats }
+    }));
+  };
+
+  const addCard = (card) => {
+    setUserCards(prev => [...prev, card]);
+  };
+
+  const removeCard = (cardId) => {
+    setUserCards(prev => prev.filter(c => c.id !== cardId));
+  };
+
+  const addDeck = (deck) => {
+    setUserDecks(prev => [...prev, deck]);
+  };
+
+  const updateDeck = (deckId, updates) => {
+    setUserDecks(prev => prev.map(deck => 
+      deck.id === deckId ? { ...deck, ...updates } : deck
+    ));
+    if (activeDeck && activeDeck.id === deckId) {
+      setActiveDeck(prev => ({ ...prev, ...updates }));
+    }
+  };
+
+  const deleteDeck = (deckId) => {
+    setUserDecks(prev => prev.filter(d => d.id !== deckId));
+    if (activeDeck && activeDeck.id === deckId) {
+      setActiveDeck(null);
+    }
+  };
+
+  const setActiveUserDeck = (deckId) => {
+    const deck = userDecks.find(d => d.id === deckId);
+    if (deck) {
+      setUserDecks(prev => prev.map(d => ({
+        ...d,
+        isActive: d.id === deckId
+      })));
+      setActiveDeck(deck);
+    }
+  };
+
+  const value = {
+    user,
+    userCards,
+    userDecks,
+    activeDeck,
+    isAuthenticated,
+    register,
+    login,
+    logout,
+    updateUser,
+    updateUserStats,
+    addCard,
+    removeCard,
+    addDeck,
+    updateDeck,
+    deleteDeck,
+    setActiveDeck: setActiveUserDeck,
+  };
+
+  return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
+};
+
+// Helper function to generate starter cards
+function generateStarterCards() {
+  const cards = [];
+  const types = ['Warrior', 'Mage', 'Assassin', 'Tank', 'Support'];
+  const names = {
+    Warrior: ['Steel Knight', 'Blade Master', 'Iron Guardian', 'War Chief'],
+    Mage: ['Fire Wizard', 'Ice Sorcerer', 'Storm Mage', 'Arcane Master'],
+    Assassin: ['Shadow Blade', 'Night Stalker', 'Silent Death', 'Phantom Rogue'],
+    Tank: ['Stone Wall', 'Iron Fortress', 'Shield Bearer', 'Mountain Guard'],
+    Support: ['Holy Priest', 'Life Keeper', 'Divine Healer', 'Spirit Guide']
+  };
+  
+  for (let i = 0; i < 10; i++) {
+    const type = types[Math.floor(Math.random() * types.length)];
+    const typeNames = names[type];
+    const name = typeNames[Math.floor(Math.random() * typeNames.length)];
+    
+    cards.push({
+      id: Date.now() + i + Math.random(),
+      name: `${name}`,
+      type,
+      rarity: 'Common',
+      level: 1,
+      attack: 30 + Math.floor(Math.random() * 20),
+      defense: 30 + Math.floor(Math.random() * 20),
+      health: 100 + Math.floor(Math.random() * 50),
+      ability: 'Basic Attack',
+      image: `https://api.dicebear.com/7.x/bottts/svg?seed=${type}${i}${Date.now()}`,
+    });
+  }
+  
+  return cards;
+}
