@@ -22,6 +22,7 @@ const Navbar = () => {
     { name: 'Clan', path: '/clan', icon: '🛡️' },
     { name: 'Tournament', path: '/tournament', icon: '🏆' },
     { name: 'Leaderboard', path: '/leaderboard', icon: '📊' },
+    { name: 'Design Contest', path: '/design-contest', icon: '🎨' },
   ];
 
   // Safety check - don't render if user is not loaded yet

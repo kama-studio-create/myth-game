@@ -81,6 +81,15 @@ function AppRoutes() {
             </ProtectedRoute>
           } 
         />
+
+        <Route 
+  path="/design-contest" 
+  element={
+    <ProtectedRoute>
+      <Layout><DesignContest /></Layout>
+    </ProtectedRoute>
+  } 
+/>
         <Route 
           path="/clan" 
           element={
