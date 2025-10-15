@@ -297,25 +297,136 @@ export const GameProvider = ({ children }) => {
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
 };
 
+
 // Helper function to generate starter cards
 function generateStarterCards() {
   const cards = [];
   const types = ['Warrior', 'Mage', 'Assassin', 'Tank', 'Support'];
   const names = {
-    Warrior: ['Steel Knight', 'Blade Master', 'Iron Guardian', 'War Chief'],
-    Mage: ['Fire Wizard', 'Ice Sorcerer', 'Storm Mage', 'Arcane Master'],
-    Assassin: ['Shadow Blade', 'Night Stalker', 'Silent Death', 'Phantom Rogue'],
-    Tank: ['Stone Wall', 'Iron Fortress', 'Shield Bearer', 'Mountain Guard'],
-    Support: ['Holy Priest', 'Life Keeper', 'Divine Healer', 'Spirit Guide']
+    Warrior: ['Achilles', 'Hercules', 'Ares', 'Leonidas'],
+    Mage: ['Zeus', 'Merlin', 'Gandalf', 'Morgana'],
+    Assassin: ['Loki', 'Artemis', 'Hermes', 'Shadow'],
+    Tank: ['Atlas', 'Thor', 'Odin', 'Titan'],
+    Support: ['Athena', 'Apollo', 'Hera', 'Freya']
   };
+
+  // Predefined cards with custom images
+  const predefinedCards = [
+    {
+      id: Date.now() + 1,
+      name: 'Zeus',
+      type: 'Mage',
+      rarity: 'Legendary',
+      level: 5,
+      attack: 85,
+      defense: 60,
+      health: 150,
+      ability: 'Thunder Strike: Deal massive lightning damage to all enemies',
+      image: '/cards/zeus.png', // Your Zeus card image
+    },
+    {
+      id: Date.now() + 2,
+      name: 'Odin',
+      type: 'Support',
+      rarity: 'Epic',
+      level: 4,
+      attack: 60,
+      defense: 80,
+      health: 140,
+      ability: 'Shield of Wisdom: Increase defense for all allies by 30%',
+      image: '/cards/odin.png',
+    },
+    {
+      id: Date.now() + 3,
+      name: 'Ares',
+      type: 'Warrior',
+      rarity: 'Epic',
+      level: 4,
+      attack: 90,
+      defense: 50,
+      health: 130,
+      ability: 'War Cry: Boost attack power of all allies by 25%',
+      image: '/cards/ares.png',
+    },
+    {
+      id: Date.now() + 4,
+      name: 'Poseidon',
+      type: 'Mage',
+      rarity: 'Legendary',
+      level: 5,
+      attack: 80,
+      defense: 65,
+      health: 145,
+      ability: 'Tsunami: Flood the battlefield dealing water damage',
+      image: '/cards/poseidon.png',
+    },
+    {
+      id: Date.now() + 5,
+      name: 'Cronus',
+      type: 'Warrior',
+      rarity: 'Rare',
+      level: 3,
+      attack: 75,
+      defense: 55,
+      health: 120,
+      ability: 'Titan Strength: Deal double damage for one turn',
+      image: '/cards/cronus.png',
+    },
+
+    {
+      id: Date.now() + 6,
+      name: 'Apollo',
+      type: 'Support',
+      rarity: 'Epic',
+      level: 4,
+      attack: 60,
+      defense: 80,
+      health: 140,
+      ability: 'Shield of Wisdom: Increase defense for all allies by 30%',
+      image: '/cards/apollo.png',
+    },
+
+    {
+      id: Date.now() + 7,
+      name: 'Aphrodite',
+      type: 'Support',
+      rarity: 'Epic',
+      level: 4,
+      attack: 60,
+      defense: 80,
+      health: 140,
+      ability: 'Shield of Wisdom: Increase defense for all allies by 30%',
+      image: '/cards/aphrodite.png',
+    },
+
+    {
+      id: Date.now() + 8,
+      name: 'Hera',
+      type: 'Support',
+      rarity: 'Epic',
+      level: 4,
+      attack: 60,
+      defense: 80,
+      health: 140,
+      ability: 'Shield of Wisdom: Increase defense for all allies by 30%',
+      image: '/cards/hera.png',
+    },
+
+  ];
+
+
+
+  // Add predefined cards
+  cards.push(...predefinedCards);
   
-  for (let i = 0; i < 10; i++) {
+  // Generate 5 more random cards to complete the starter deck
+  for (let i = 0; i < 5; i++) {
     const type = types[Math.floor(Math.random() * types.length)];
     const typeNames = names[type];
     const name = typeNames[Math.floor(Math.random() * typeNames.length)];
     
     cards.push({
-      id: Date.now() + i + Math.random(),
+      id: Date.now() + i + 100 + Math.random(),
       name: `${name}`,
       type,
       rarity: 'Common',
@@ -324,9 +435,11 @@ function generateStarterCards() {
       defense: 30 + Math.floor(Math.random() * 20),
       health: 100 + Math.floor(Math.random() * 50),
       ability: 'Basic Attack',
+      // Fallback to generated avatar if no custom image
       image: `https://api.dicebear.com/7.x/bottts/svg?seed=${type}${i}${Date.now()}`,
     });
   }
   
   return cards;
 }
+
