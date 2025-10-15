@@ -11,7 +11,7 @@ import ClanScreen from './screens/ClanScreen';
 import TournamentScreen from './screens/TournamentScreen';
 import LeaderboardScreen from './screens/LeaderboardScreen';
 import './styles/globals.css';
-
+import DesignContest from './components/DesignContest';
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useGame();
