@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useGame } from '../context/GameContext';
 
-
 const BattleScreen = () => {
   const { user, updateUserStats } = useGame();
   const canvasRef = useRef(null);
@@ -15,25 +14,18 @@ const BattleScreen = () => {
     const c = canvas.getContext('2d');
 
     // Responsive canvas sizing
-    const resizeCanvas = () => {
-      const container = canvas.parentElement;
-      const width = Math.min(container.clientWidth, 1024);
-      const height = Math.min(container.clientHeight - 100, 576);
-      
-      canvas.width = width;
-      canvas.height = height;
-      
-      // Adjust scale based on canvas size
-      return { width, height, scaleX: width / 1024, scaleY: height / 576 };
-    };
-
-    const { width, height, scaleX, scaleY } = resizeCanvas();
+    const container = canvas.parentElement;
+    const width = Math.min(container.clientWidth, 1200);
+    const height = Math.min(window.innerHeight - 200, 600);
+    
+    canvas.width = width;
+    canvas.height = height;
 
     c.fillRect(0, 0, canvas.width, canvas.height);
 
     const gravity = 0.7;
 
-    // ✅ Sprite Class (fixed for image loading)
+    // ✅ Sprite Class
     class Sprite {
       constructor({ position, imgSrc, scale = 1, framesMax = 1, offset = { x: 0, y: 0 } }) {
         this.position = position;
@@ -276,14 +268,18 @@ const BattleScreen = () => {
     const shop = new Sprite({
       position: { x: canvas.width * 0.6, y: canvas.height * 0.22 },
       imgSrc: '/img/shop.png',
-      scale: 2.75 * Math.min(scaleX, scaleY),
+      scale: 2.0,
       framesMax: 6
     });
 
+    const playerScale = canvas.width < 600 ? 1.2 : 2.0;
+    const playerXPos = canvas.width < 600 ? canvas.width * 0.15 : canvas.width * 0.1;
+    const enemyXPos = canvas.width < 600 ? canvas.width * 0.75 : canvas.width * 0.8;
+
     const player = new Fighter({
-      position: { x: canvas.width * 0.1, y: canvas.height * 0.57 },
+      position: { x: playerXPos, y: canvas.height * 0.55 },
       velocity: { x: 0, y: 0 },
-      scale: 2.5 * Math.min(scaleX, scaleY),
+      scale: playerScale,
       offset: { x: 215, y: 157 },
       imgSrc: '/img/samuraiMack/Idle.png',
       framesMax: 8,
@@ -300,9 +296,9 @@ const BattleScreen = () => {
     });
 
     const enemy = new Fighter({
-      position: { x: canvas.width * 0.65, y: canvas.height * 0.57 },
+      position: { x: enemyXPos, y: canvas.height * 0.55 },
       velocity: { x: 0, y: 0 },
-      scale: 2.5 * Math.min(scaleX, scaleY),
+      scale: playerScale,
       offset: { x: 215, y: 167 },
       imgSrc: '/img/kenji/Idle.png',
       framesMax: 4,
@@ -464,40 +460,36 @@ const BattleScreen = () => {
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
 
-    // Handle window resize
-    window.addEventListener('resize', resizeCanvas);
-
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-      window.removeEventListener('resize', resizeCanvas);
       clearTimeout(timerId);
     };
   }, []);
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-2 sm:p-4">
-      <div className="w-full max-w-6xl">
+    <div className="min-h-screen w-full bg-black flex flex-col items-center justify-center p-1 sm:p-4 overflow-x-hidden">
+      <div className="w-full max-w-full px-1 sm:px-4">
         {/* HUD - Responsive */}
-        <div className="mb-2 sm:mb-4 flex flex-col sm:flex-row items-center gap-2 sm:gap-4 px-2">
+        <div className="mb-2 sm:mb-4 flex flex-col sm:flex-row items-center gap-1 sm:gap-4 px-1 sm:px-2">
           {/* Player Health */}
           <div className="w-full sm:flex-1 flex items-center gap-2">
-            <span className="text-xs sm:text-sm font-bold text-white min-w-fit">P1 Health</span>
-            <div className="flex-1 relative border-2 sm:border-4 border-white h-6 sm:h-8 rounded">
+            <span className="text-xs sm:text-sm font-bold text-white min-w-fit whitespace-nowrap">P1</span>
+            <div className="flex-1 relative border-2 border-white h-4 sm:h-8 rounded">
               <div style={{ backgroundColor: 'red', height: '100%' }}></div>
               <div id="playerHealth" style={{ position: 'absolute', background: '#818CF8', top: 0, bottom: 0, right: 0, width: '100%' }}></div>
             </div>
           </div>
 
           {/* Timer */}
-          <div id="timer" className="border-2 sm:border-4 border-white w-16 sm:w-20 h-12 sm:h-14 flex items-center justify-center bg-black text-white text-lg sm:text-2xl font-bold rounded flex-shrink-0">
+          <div id="timer" className="border-2 border-white w-12 sm:w-20 h-10 sm:h-14 flex items-center justify-center bg-black text-white text-sm sm:text-2xl font-bold rounded flex-shrink-0">
             60
           </div>
 
           {/* Enemy Health */}
           <div className="w-full sm:flex-1 flex items-center gap-2">
-            <span className="text-xs sm:text-sm font-bold text-white min-w-fit">P2 Health</span>
-            <div className="flex-1 relative border-2 sm:border-4 border-white h-6 sm:h-8 rounded">
+            <span className="text-xs sm:text-sm font-bold text-white min-w-fit whitespace-nowrap">P2</span>
+            <div className="flex-1 relative border-2 border-white h-4 sm:h-8 rounded">
               <div style={{ backgroundColor: 'red', height: '100%' }}></div>
               <div id="enemyHealth" style={{ position: 'absolute', background: '#818CF8', top: 0, bottom: 0, right: 0, left: 0 }}></div>
             </div>
@@ -505,11 +497,10 @@ const BattleScreen = () => {
         </div>
 
         {/* Battle Area - Responsive Container */}
-        <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden border-2 sm:border-4 border-gray-600">
+        <div className="relative w-full bg-black rounded-lg overflow-hidden border-2 sm:border-4 border-gray-600" style={{ maxHeight: '70vh' }}>
           <canvas 
             ref={canvasRef}
-            className="w-full h-full"
-            style={{ display: 'block' }}
+            className="w-full h-full block"
           ></canvas>
           
           <div 
@@ -524,7 +515,7 @@ const BattleScreen = () => {
               bottom: 0, 
               left: 0, 
               display: 'none', 
-              fontSize: 'clamp(24px, 8vw, 64px)',
+              fontSize: 'clamp(20px, 6vw, 56px)',
               fontWeight: 'bold',
               textShadow: '0 0 20px rgba(0,0,0,0.8)',
               zIndex: 10
@@ -532,14 +523,14 @@ const BattleScreen = () => {
           ></div>
         </div>
 
-        {/* Controls Info - Mobile */}
-        <div className="mt-3 sm:mt-4 p-3 bg-slate-800/50 rounded-lg border border-purple-500/30">
-          <p className="text-xs sm:text-sm text-gray-300 mb-2 font-semibold">Controls:</p>
-          <div className="grid grid-cols-2 gap-2 text-xs text-gray-400">
-            <div><span className="text-yellow-400">A/D</span> - Move Player</div>
+        {/* Controls Info */}
+        <div className="mt-2 sm:mt-4 p-2 sm:p-3 bg-slate-800/50 rounded-lg border border-purple-500/30">
+          <p className="text-xs font-semibold text-gray-300 mb-1">Controls:</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-2 text-xs text-gray-400">
+            <div><span className="text-yellow-400">A/D</span> - Move</div>
             <div><span className="text-yellow-400">W</span> - Jump</div>
             <div><span className="text-yellow-400">Space</span> - Attack</div>
-            <div><span className="text-yellow-400">Arrow Keys</span> - Opponent</div>
+            <div><span className="text-yellow-400">Arrows</span> - P2</div>
           </div>
         </div>
       </div>

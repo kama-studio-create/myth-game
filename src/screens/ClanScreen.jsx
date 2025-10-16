@@ -1,11 +1,29 @@
 import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
-import Layout from '../components/Layout';
 import { Users, Crown, Shield, TrendingUp, LogOut, LogIn } from 'lucide-react';
 
 const ClanScreen = () => {
-  const { clan, joinClan, leaveClan, user } = useGame();
+  const { user, updateUser } = useGame();
+  const [clan, setClan] = useState(user?.clan || null);
   const [searchTerm, setSearchTerm] = useState('');
+
+  const joinClan = (clanName) => {
+    setClan({
+      name: clanName,
+      joinedAt: new Date().toISOString(),
+      role: 'Member'
+    });
+    updateUser({ clan: clanName });
+    alert(`Joined ${clanName}!`);
+  };
+
+  const leaveClan = () => {
+    if (window.confirm('Are you sure you want to leave your clan?')) {
+      setClan(null);
+      updateUser({ clan: null });
+      alert('Left clan successfully!');
+    }
+  };
 
   const availableClans = [
     {
@@ -69,175 +87,183 @@ const ClanScreen = () => {
   );
 
   return (
-    <Layout
-      title="Clans"
-      subtitle="Join forces with other warriors and conquer together"
-    >
-      {clan ? (
-        /* Current Clan View */
-        <div>
-          {/* Clan Header */}
-          <div className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 rounded-xl p-8 mb-8 border border-purple-500/30">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-4">
-                <div className="text-6xl">🛡️</div>
-                <div>
-                  <h2 className="text-3xl font-bold">{clan.name}</h2>
-                  <p className="text-gray-300">Member since {new Date(clan.joinedAt).toLocaleDateString()}</p>
-                </div>
-              </div>
-              <button
-                onClick={leaveClan}
-                className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition-colors"
-              >
-                <LogOut size={20} />
-                <span>Leave Clan</span>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-slate-800/50 rounded-lg p-4 text-center">
-                <Users className="mx-auto mb-2 text-purple-400" size={32} />
-                <p className="text-2xl font-bold">45</p>
-                <p className="text-sm text-gray-400">Members</p>
-              </div>
-              <div className="bg-slate-800/50 rounded-lg p-4 text-center">
-                <Crown className="mx-auto mb-2 text-yellow-400" size={32} />
-                <p className="text-2xl font-bold">12</p>
-                <p className="text-sm text-gray-400">Clan Level</p>
-              </div>
-              <div className="bg-slate-800/50 rounded-lg p-4 text-center">
-                <Shield className="mx-auto mb-2 text-blue-400" size={32} />
-                <p className="text-2xl font-bold">1,245</p>
-                <p className="text-sm text-gray-400">Trophies</p>
-              </div>
-              <div className="bg-slate-800/50 rounded-lg p-4 text-center">
-                <TrendingUp className="mx-auto mb-2 text-green-400" size={32} />
-                <p className="text-2xl font-bold">#15</p>
-                <p className="text-sm text-gray-400">Ranking</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Clan Members */}
-          <div className="bg-slate-800 rounded-xl p-6 mb-8 border border-slate-700">
-            <h3 className="text-xl font-bold mb-4">Clan Members</h3>
-            <div className="space-y-3">
-              {Array.from({ length: 8 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg hover:bg-slate-700 transition-colors"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-xl">
-                      {index === 0 ? '👑' : '⚔️'}
-                    </div>
-                    <div>
-                      <p className="font-semibold">
-                        {index === 0 ? user?.username : `Player${index + 1}`}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {index === 0 ? 'Leader' : index < 3 ? 'Elder' : 'Member'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-yellow-400">{Math.floor(Math.random() * 500) + 100}</p>
-                    <p className="text-xs text-gray-400">Trophies</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Clan Chat */}
-          <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-            <h3 className="text-xl font-bold mb-4">Clan Chat</h3>
-            <div className="space-y-3 mb-4 h-64 overflow-y-auto">
-              {[
-                { user: 'Leader', message: 'Welcome to the clan!', time: '10:30 AM' },
-                { user: user?.username, message: 'Thanks for having me!', time: '10:32 AM' },
-                { user: 'Player2', message: 'Anyone up for a battle?', time: '10:35 AM' },
-                { user: 'Player3', message: 'Let\'s win this tournament!', time: '10:40 AM' }
-              ].map((msg, index) => (
-                <div key={index} className="p-3 bg-slate-700/50 rounded-lg">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-semibold text-sm text-purple-400">{msg.user}</span>
-                    <span className="text-xs text-gray-500">{msg.time}</span>
-                  </div>
-                  <p className="text-sm text-gray-300">{msg.message}</p>
-                </div>
-              ))}
-            </div>
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                placeholder="Type a message..."
-                className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:border-purple-500"
-              />
-              <button className="btn-primary">Send</button>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-2">
+            Clans
+          </h1>
+          <p className="text-gray-300">Join forces with other warriors and conquer together</p>
         </div>
-      ) : (
-        /* Clan Browser */
-        <div>
-          {/* Search */}
-          <div className="mb-6">
-            <input
-              type="text"
-              placeholder="Search clans..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 focus:outline-none focus:border-purple-500"
-            />
-          </div>
 
-          {/* Available Clans */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredClans.map((clanItem) => (
-              <div
-                key={clanItem.id}
-                className={`bg-gradient-to-br ${clanItem.color} rounded-xl p-6 border border-white/10 card-hover`}
-              >
-                <div className="text-center mb-4">
-                  <div className="text-6xl mb-3">{clanItem.icon}</div>
-                  <h3 className="text-2xl font-bold mb-2">{clanItem.name}</h3>
-                  <p className="text-sm text-gray-200 mb-4">{clanItem.description}</p>
-                </div>
-
-                <div className="space-y-3 mb-4">
-                  <div className="flex items-center justify-between p-2 bg-black/20 rounded">
-                    <span className="text-sm text-gray-200">Members:</span>
-                    <span className="font-bold">{clanItem.members}/50</span>
-                  </div>
-                  <div className="flex items-center justify-between p-2 bg-black/20 rounded">
-                    <span className="text-sm text-gray-200">Clan Level:</span>
-                    <span className="font-bold">{clanItem.level}</span>
+        {clan ? (
+          /* Current Clan View */
+          <div>
+            {/* Clan Header */}
+            <div className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 rounded-xl p-8 mb-8 border border-purple-500/30">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-4">
+                  <div className="text-6xl">🛡️</div>
+                  <div>
+                    <h2 className="text-3xl font-bold text-white">{clan.name}</h2>
+                    <p className="text-gray-300">Member since {new Date(clan.joinedAt).toLocaleDateString()}</p>
                   </div>
                 </div>
-
                 <button
-                  onClick={() => joinClan(clanItem.name)}
-                  className="w-full bg-white text-slate-900 hover:bg-gray-100 py-3 rounded-lg font-bold transition-colors flex items-center justify-center space-x-2"
+                  onClick={leaveClan}
+                  className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition-colors text-white"
                 >
-                  <LogIn size={20} />
-                  <span>Join Clan</span>
+                  <LogOut size={20} />
+                  <span>Leave Clan</span>
                 </button>
               </div>
-            ))}
-          </div>
 
-          {filteredClans.length === 0 && (
-            <div className="text-center py-20">
-              <Users size={64} className="mx-auto text-gray-600 mb-4" />
-              <p className="text-gray-400 text-lg">No clans found</p>
-              <p className="text-gray-500 text-sm mt-2">Try a different search term</p>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-slate-800/50 rounded-lg p-4 text-center">
+                  <Users className="mx-auto mb-2 text-purple-400" size={32} />
+                  <p className="text-2xl font-bold text-white">45</p>
+                  <p className="text-sm text-gray-400">Members</p>
+                </div>
+                <div className="bg-slate-800/50 rounded-lg p-4 text-center">
+                  <Crown className="mx-auto mb-2 text-yellow-400" size={32} />
+                  <p className="text-2xl font-bold text-white">12</p>
+                  <p className="text-sm text-gray-400">Clan Level</p>
+                </div>
+                <div className="bg-slate-800/50 rounded-lg p-4 text-center">
+                  <Shield className="mx-auto mb-2 text-blue-400" size={32} />
+                  <p className="text-2xl font-bold text-white">1,245</p>
+                  <p className="text-sm text-gray-400">Trophies</p>
+                </div>
+                <div className="bg-slate-800/50 rounded-lg p-4 text-center">
+                  <TrendingUp className="mx-auto mb-2 text-green-400" size={32} />
+                  <p className="text-2xl font-bold text-white">#15</p>
+                  <p className="text-sm text-gray-400">Ranking</p>
+                </div>
+              </div>
             </div>
-          )}
-        </div>
-      )}
-    </Layout>
+
+            {/* Clan Members */}
+            <div className="bg-slate-800 rounded-xl p-6 mb-8 border border-slate-700">
+              <h3 className="text-xl font-bold mb-4 text-white">Clan Members</h3>
+              <div className="space-y-3">
+                {Array.from({ length: 8 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg hover:bg-slate-700 transition-colors"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-xl">
+                        {index === 0 ? '👑' : '⚔️'}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-white">
+                          {index === 0 ? user?.username : `Player${index + 1}`}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {index === 0 ? 'Leader' : index < 3 ? 'Elder' : 'Member'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-yellow-400">{Math.floor(Math.random() * 500) + 100}</p>
+                      <p className="text-xs text-gray-400">Trophies</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Clan Chat */}
+            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+              <h3 className="text-xl font-bold mb-4 text-white">Clan Chat</h3>
+              <div className="space-y-3 mb-4 h-64 overflow-y-auto">
+                {[
+                  { user: 'Leader', message: 'Welcome to the clan!', time: '10:30 AM' },
+                  { user: user?.username, message: 'Thanks for having me!', time: '10:32 AM' },
+                  { user: 'Player2', message: 'Anyone up for a battle?', time: '10:35 AM' },
+                  { user: 'Player3', message: 'Let\'s win this tournament!', time: '10:40 AM' }
+                ].map((msg, index) => (
+                  <div key={index} className="p-3 bg-slate-700/50 rounded-lg">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-semibold text-sm text-purple-400">{msg.user}</span>
+                      <span className="text-xs text-gray-500">{msg.time}</span>
+                    </div>
+                    <p className="text-sm text-gray-300">{msg.message}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  placeholder="Type a message..."
+                  className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:border-purple-500 text-white"
+                />
+                <button className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-semibold transition-all">
+                  Send
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Clan Browser */
+          <div>
+            {/* Search */}
+            <div className="mb-6">
+              <input
+                type="text"
+                placeholder="Search clans..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 focus:outline-none focus:border-purple-500 text-white"
+              />
+            </div>
+
+            {/* Available Clans */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredClans.map((clanItem) => (
+                <div
+                  key={clanItem.id}
+                  className={`bg-gradient-to-br ${clanItem.color} rounded-xl p-6 border border-white/10 hover:scale-105 transition-transform`}
+                >
+                  <div className="text-center mb-4">
+                    <div className="text-6xl mb-3">{clanItem.icon}</div>
+                    <h3 className="text-2xl font-bold mb-2 text-white">{clanItem.name}</h3>
+                    <p className="text-sm text-gray-200 mb-4">{clanItem.description}</p>
+                  </div>
+
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center justify-between p-2 bg-black/20 rounded">
+                      <span className="text-sm text-gray-200">Members:</span>
+                      <span className="font-bold text-white">{clanItem.members}/50</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 bg-black/20 rounded">
+                      <span className="text-sm text-gray-200">Clan Level:</span>
+                      <span className="font-bold text-white">{clanItem.level}</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => joinClan(clanItem.name)}
+                    className="w-full bg-white text-slate-900 hover:bg-gray-100 py-3 rounded-lg font-bold transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <LogIn size={20} />
+                    <span>Join Clan</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {filteredClans.length === 0 && (
+              <div className="text-center py-20">
+                <Users size={64} className="mx-auto text-gray-600 mb-4" />
+                <p className="text-gray-400 text-lg">No clans found</p>
+                <p className="text-gray-500 text-sm mt-2">Try a different search term</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
