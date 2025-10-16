@@ -297,17 +297,18 @@ export const GameProvider = ({ children }) => {
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
 };
 
+// Replace the generateStarterCards function at the bottom of GameContext.jsx
+// with this complete version:
 
-// Helper function to generate starter cards
 function generateStarterCards() {
   const cards = [];
   const types = ['Warrior', 'Mage', 'Assassin', 'Tank', 'Support'];
   const names = {
-    Warrior: ['Achilles', 'Hercules', 'Ares', 'Leonidas'],
-    Mage: ['Zeus', 'Merlin', 'Gandalf', 'Morgana'],
+    Warrior: ['Achilles', 'Hercules', 'Leonidas', 'Spartacus'],
+    Mage: ['Merlin', 'Gandalf', 'Morgana', 'Circe'],
     Assassin: ['Loki', 'Artemis', 'Hermes', 'Shadow'],
-    Tank: ['Atlas', 'Thor', 'Odin', 'Titan'],
-    Support: ['Athena', 'Apollo', 'Hera', 'Freya']
+    Tank: ['Atlas', 'Thor', 'Titan', 'Goliath'],
+    Support: ['Athena', 'Freya', 'Iris', 'Hestia']
   };
 
   // Predefined cards with custom images
@@ -322,7 +323,7 @@ function generateStarterCards() {
       defense: 60,
       health: 150,
       ability: 'Thunder Strike: Deal massive lightning damage to all enemies',
-      image: '/cards/zeus.png', // Your Zeus card image
+      image: '/cards/zeus.png',
     },
     {
       id: Date.now() + 2,
@@ -372,7 +373,6 @@ function generateStarterCards() {
       ability: 'Titan Strength: Deal double damage for one turn',
       image: '/cards/cronus.png',
     },
-
     {
       id: Date.now() + 6,
       name: 'Apollo',
@@ -382,64 +382,63 @@ function generateStarterCards() {
       attack: 60,
       defense: 80,
       health: 140,
-      ability: 'Shield of Wisdom: Increase defense for all allies by 30%',
+      ability: 'Healing Light: Restore health to all allies',
       image: '/cards/apollo.png',
     },
-
     {
       id: Date.now() + 7,
       name: 'Aphrodite',
       type: 'Support',
       rarity: 'Epic',
       level: 4,
-      attack: 60,
-      defense: 80,
-      health: 140,
-      ability: 'Shield of Wisdom: Increase defense for all allies by 30%',
+      attack: 55,
+      defense: 70,
+      health: 135,
+      ability: 'Charm: Confuse enemies and reduce their attack',
       image: '/cards/aphrodite.png',
     },
-
     {
       id: Date.now() + 8,
       name: 'Hera',
       type: 'Support',
       rarity: 'Epic',
       level: 4,
-      attack: 60,
-      defense: 80,
-      health: 140,
-      ability: 'Shield of Wisdom: Increase defense for all allies by 30%',
+      attack: 65,
+      defense: 75,
+      health: 138,
+      ability: 'Queen\'s Blessing: Protect allies from harm',
       image: '/cards/hera.png',
     },
-
   ];
-
-
 
   // Add predefined cards
   cards.push(...predefinedCards);
   
-  // Generate 5 more random cards to complete the starter deck
+  // Generate 5 more random cards WITHOUT any image URLs
   for (let i = 0; i < 5; i++) {
     const type = types[Math.floor(Math.random() * types.length)];
     const typeNames = names[type];
     const name = typeNames[Math.floor(Math.random() * typeNames.length)];
+    const rarities = ['Common', 'Rare'];
+    const rarity = rarities[Math.floor(Math.random() * rarities.length)];
     
     cards.push({
       id: Date.now() + i + 100 + Math.random(),
-      name: `${name}`,
+      name: name,
       type,
-      rarity: 'Common',
+      rarity,
       level: 1,
       attack: 30 + Math.floor(Math.random() * 20),
       defense: 30 + Math.floor(Math.random() * 20),
       health: 100 + Math.floor(Math.random() * 50),
       ability: 'Basic Attack',
-      // Fallback to generated avatar if no custom image
-      image: `https://api.dicebear.com/7.x/bottts/svg?seed=${type}${i}${Date.now()}`,
+      // NO image property at all - will use icon fallback
     });
   }
   
   return cards;
 }
+
+
+
 

@@ -14,70 +14,80 @@ const BattleScreen = () => {
     const canvas = canvasRef.current;
     const c = canvas.getContext('2d');
 
-    canvas.width = 1024;
-    canvas.height = 576;
+    // Responsive canvas sizing
+    const resizeCanvas = () => {
+      const container = canvas.parentElement;
+      const width = Math.min(container.clientWidth, 1024);
+      const height = Math.min(container.clientHeight - 100, 576);
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      // Adjust scale based on canvas size
+      return { width, height, scaleX: width / 1024, scaleY: height / 576 };
+    };
+
+    const { width, height, scaleX, scaleY } = resizeCanvas();
 
     c.fillRect(0, 0, canvas.width, canvas.height);
 
     const gravity = 0.7;
 
     // ✅ Sprite Class (fixed for image loading)
-class Sprite {
-  constructor({ position, imgSrc, scale = 1, framesMax = 1, offset = { x: 0, y: 0 } }) {
-    this.position = position;
-    this.height = 150;
-    this.width = 50;
-    this.image = new Image();
-    this.image.src = imgSrc;
-    this.imageLoaded = false; // <— NEW flag
+    class Sprite {
+      constructor({ position, imgSrc, scale = 1, framesMax = 1, offset = { x: 0, y: 0 } }) {
+        this.position = position;
+        this.height = 150;
+        this.width = 50;
+        this.image = new Image();
+        this.image.src = imgSrc;
+        this.imageLoaded = false;
 
-    this.image.onload = () => {
-      this.imageLoaded = true;
-    };
+        this.image.onload = () => {
+          this.imageLoaded = true;
+        };
 
-    this.image.onerror = () => {
-      console.error("❌ Failed to load image:", imgSrc);
-    };
+        this.image.onerror = () => {
+          console.error("❌ Failed to load image:", imgSrc);
+        };
 
-    this.scale = scale;
-    this.framesMax = framesMax;
-    this.framesCurrent = 0;
-    this.framesElapsed = 0;
-    this.framesHold = 5;
-    this.offset = offset;
-  }
+        this.scale = scale;
+        this.framesMax = framesMax;
+        this.framesCurrent = 0;
+        this.framesElapsed = 0;
+        this.framesHold = 5;
+        this.offset = offset;
+      }
 
-  draw() {
-    // ✅ Don’t draw until image is ready
-    if (!this.imageLoaded) return;
+      draw() {
+        if (!this.imageLoaded) return;
 
-    c.drawImage(
-      this.image,
-      this.framesCurrent * (this.image.width / this.framesMax),
-      0,
-      this.image.width / this.framesMax,
-      this.image.height,
-      this.position.x - this.offset.x,
-      this.position.y - this.offset.y,
-      (this.image.width / this.framesMax) * this.scale,
-      this.image.height * this.scale
-    );
-  }
+        c.drawImage(
+          this.image,
+          this.framesCurrent * (this.image.width / this.framesMax),
+          0,
+          this.image.width / this.framesMax,
+          this.image.height,
+          this.position.x - this.offset.x,
+          this.position.y - this.offset.y,
+          (this.image.width / this.framesMax) * this.scale,
+          this.image.height * this.scale
+        );
+      }
 
-  animateFrames() {
-    this.framesElapsed++;
-    if (this.framesElapsed % this.framesHold === 0) {
-      this.framesCurrent =
-        this.framesCurrent < this.framesMax - 1 ? this.framesCurrent + 1 : 0;
+      animateFrames() {
+        this.framesElapsed++;
+        if (this.framesElapsed % this.framesHold === 0) {
+          this.framesCurrent =
+            this.framesCurrent < this.framesMax - 1 ? this.framesCurrent + 1 : 0;
+        }
+      }
+
+      update() {
+        this.draw();
+        this.animateFrames();
+      }
     }
-  }
-
-  update() {
-    this.draw();
-    this.animateFrames();
-  }
-}
-
 
     // Fighter Class
     class Fighter extends Sprite {
@@ -120,7 +130,7 @@ class Sprite {
             this.velocity.y += gravity;
           }
           this.velocity.y = 0;
-          this.position.y = 330;
+          this.position.y = canvas.height - 150;
           return;
         }
         this.animateFrames();
@@ -133,7 +143,7 @@ class Sprite {
 
         if (this.position.y + this.height + this.velocity.y >= canvas.height - 96) {
           this.velocity.y = 0;
-          this.position.y = 330;
+          this.position.y = canvas.height - 150;
         } else {
           this.velocity.y += gravity;
         }
@@ -258,57 +268,55 @@ class Sprite {
       }
     }
 
-    // ✅ FIXED: Replace process.env.PUBLIC_URL with direct paths
+    const background = new Sprite({
+      position: { x: 0, y: 0 },
+      imgSrc: '/img/background.png',
+    });
 
-const background = new Sprite({
-  position: { x: 0, y: 0 },
-  imgSrc: '/img/background.png', // ✅ Changed
-});
+    const shop = new Sprite({
+      position: { x: canvas.width * 0.6, y: canvas.height * 0.22 },
+      imgSrc: '/img/shop.png',
+      scale: 2.75 * Math.min(scaleX, scaleY),
+      framesMax: 6
+    });
 
-const shop = new Sprite({
-  position: { x: 600, y: 128 },
-  imgSrc: '/img/shop.png', // ✅ Changed
-  scale: 2.75,
-  framesMax: 6
-});
+    const player = new Fighter({
+      position: { x: canvas.width * 0.1, y: canvas.height * 0.57 },
+      velocity: { x: 0, y: 0 },
+      scale: 2.5 * Math.min(scaleX, scaleY),
+      offset: { x: 215, y: 157 },
+      imgSrc: '/img/samuraiMack/Idle.png',
+      framesMax: 8,
+      sprites: {
+        idle: { imgSrc: '/img/samuraiMack/Idle.png', framesMax: 8 },
+        run: { imgSrc: '/img/samuraiMack/Run.png', framesMax: 8 },
+        jump: { imgSrc: '/img/samuraiMack/Jump.png', framesMax: 2 },
+        fall: { imgSrc: '/img/samuraiMack/Fall.png', framesMax: 2 },
+        attack1: { imgSrc: '/img/samuraiMack/Attack1.png', framesMax: 6 },
+        takeHit: { imgSrc: '/img/samuraiMack/Take Hit - white silhouette.png', framesMax: 4 },
+        death: { imgSrc: '/img/samuraiMack/Death.png', framesMax: 6 },
+      },
+      attackBox: { offset: { x: 100, y: 50 }, width: 160, height: 50 },
+    });
 
-const player = new Fighter({
-  position: { x: 0, y: 0 },
-  velocity: { x: 0, y: 0 },
-  scale: 2.5,
-  offset: { x: 215, y: 157 },
-  imgSrc: '/img/samuraiMack/Idle.png', // ✅ Changed
-  framesMax: 8,
-  sprites: {
-    idle: { imgSrc: '/img/samuraiMack/Idle.png', framesMax: 8 },
-    run: { imgSrc: '/img/samuraiMack/Run.png', framesMax: 8 },
-    jump: { imgSrc: '/img/samuraiMack/Jump.png', framesMax: 2 },
-    fall: { imgSrc: '/img/samuraiMack/Fall.png', framesMax: 2 },
-    attack1: { imgSrc: '/img/samuraiMack/Attack1.png', framesMax: 6 },
-    takeHit: { imgSrc: '/img/samuraiMack/Take Hit - white silhouette.png', framesMax: 4 },
-    death: { imgSrc: '/img/samuraiMack/Death.png', framesMax: 6 },
-  },
-  attackBox: { offset: { x: 100, y: 50 }, width: 160, height: 50 },
-});
-
-const enemy = new Fighter({
-  position: { x: 400, y: 100 },
-  velocity: { x: 0, y: 0 },
-  scale: 2.5,
-  offset: { x: 215, y: 167 },
-  imgSrc: '/img/kenji/Idle.png', // ✅ Changed
-  framesMax: 4,
-  sprites: {
-    idle: { imgSrc: '/img/kenji/Idle.png', framesMax: 4 },
-    run: { imgSrc: '/img/kenji/Run.png', framesMax: 8 },
-    jump: { imgSrc: '/img/kenji/Jump.png', framesMax: 2 },
-    fall: { imgSrc: '/img/kenji/Fall.png', framesMax: 2 },
-    attack1: { imgSrc: '/img/kenji/Attack1.png', framesMax: 4 },
-    takeHit: { imgSrc: '/img/kenji/Take Hit.png', framesMax: 3 },
-    death: { imgSrc: '/img/kenji/Death.png', framesMax: 7 },
-  },
-  attackBox: { offset: { x: -170, y: 50 }, width: 170, height: 50 },
-});
+    const enemy = new Fighter({
+      position: { x: canvas.width * 0.65, y: canvas.height * 0.57 },
+      velocity: { x: 0, y: 0 },
+      scale: 2.5 * Math.min(scaleX, scaleY),
+      offset: { x: 215, y: 167 },
+      imgSrc: '/img/kenji/Idle.png',
+      framesMax: 4,
+      sprites: {
+        idle: { imgSrc: '/img/kenji/Idle.png', framesMax: 4 },
+        run: { imgSrc: '/img/kenji/Run.png', framesMax: 8 },
+        jump: { imgSrc: '/img/kenji/Jump.png', framesMax: 2 },
+        fall: { imgSrc: '/img/kenji/Fall.png', framesMax: 2 },
+        attack1: { imgSrc: '/img/kenji/Attack1.png', framesMax: 4 },
+        takeHit: { imgSrc: '/img/kenji/Take Hit.png', framesMax: 3 },
+        death: { imgSrc: '/img/kenji/Death.png', framesMax: 7 },
+      },
+      attackBox: { offset: { x: -170, y: 50 }, width: 170, height: 50 },
+    });
 
     const keys = {
       a: { pressed: false },
@@ -456,37 +464,85 @@ const enemy = new Fighter({
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
 
+    // Handle window resize
+    window.addEventListener('resize', resizeCanvas);
+
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('resize', resizeCanvas);
       clearTimeout(timerId);
     };
   }, []);
 
   return (
-    <div style={{ position: 'relative', display: 'inline-block' }}>
-      <div style={{ position: 'absolute', display: 'flex', width: '100%', alignItems: 'center', padding: '20px' }}>
-        {/* Player health */}
-        <div style={{ position: 'relative', width: '100%', display: 'flex', border: '4px solid white', justifyContent: 'flex-end', borderRight: 'none' }}>
-          <div style={{ backgroundColor: 'red', height: '30px', width: '100%' }}></div>
-          <div id="playerHealth" style={{ position: 'absolute', background: '#818CF8', top: 0, bottom: 0, right: 0, width: '100%' }}></div>
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-2 sm:p-4">
+      <div className="w-full max-w-6xl">
+        {/* HUD - Responsive */}
+        <div className="mb-2 sm:mb-4 flex flex-col sm:flex-row items-center gap-2 sm:gap-4 px-2">
+          {/* Player Health */}
+          <div className="w-full sm:flex-1 flex items-center gap-2">
+            <span className="text-xs sm:text-sm font-bold text-white min-w-fit">P1 Health</span>
+            <div className="flex-1 relative border-2 sm:border-4 border-white h-6 sm:h-8 rounded">
+              <div style={{ backgroundColor: 'red', height: '100%' }}></div>
+              <div id="playerHealth" style={{ position: 'absolute', background: '#818CF8', top: 0, bottom: 0, right: 0, width: '100%' }}></div>
+            </div>
+          </div>
+
+          {/* Timer */}
+          <div id="timer" className="border-2 sm:border-4 border-white w-16 sm:w-20 h-12 sm:h-14 flex items-center justify-center bg-black text-white text-lg sm:text-2xl font-bold rounded flex-shrink-0">
+            60
+          </div>
+
+          {/* Enemy Health */}
+          <div className="w-full sm:flex-1 flex items-center gap-2">
+            <span className="text-xs sm:text-sm font-bold text-white min-w-fit">P2 Health</span>
+            <div className="flex-1 relative border-2 sm:border-4 border-white h-6 sm:h-8 rounded">
+              <div style={{ backgroundColor: 'red', height: '100%' }}></div>
+              <div id="enemyHealth" style={{ position: 'absolute', background: '#818CF8', top: 0, bottom: 0, right: 0, left: 0 }}></div>
+            </div>
+          </div>
         </div>
 
-        {/* Timer */}
-        <div id="timer" style={{ backgroundColor: 'black', width: '100px', height: '50px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', border: '4px solid white' }}>
-          60
+        {/* Battle Area - Responsive Container */}
+        <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden border-2 sm:border-4 border-gray-600">
+          <canvas 
+            ref={canvasRef}
+            className="w-full h-full"
+            style={{ display: 'block' }}
+          ></canvas>
+          
+          <div 
+            id="display-text" 
+            style={{ 
+              position: 'absolute', 
+              color: 'white', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              top: 0, 
+              right: 0, 
+              bottom: 0, 
+              left: 0, 
+              display: 'none', 
+              fontSize: 'clamp(24px, 8vw, 64px)',
+              fontWeight: 'bold',
+              textShadow: '0 0 20px rgba(0,0,0,0.8)',
+              zIndex: 10
+            }}
+          ></div>
         </div>
 
-        {/* Enemy health */}
-        <div style={{ position: 'relative', width: '100%', border: '4px solid white', borderLeft: 'none' }}>
-          <div style={{ backgroundColor: 'red', height: '30px' }}></div>
-          <div id="enemyHealth" style={{ position: 'absolute', background: '#818CF8', top: 0, bottom: 0, right: 0, left: 0 }}></div>
+        {/* Controls Info - Mobile */}
+        <div className="mt-3 sm:mt-4 p-3 bg-slate-800/50 rounded-lg border border-purple-500/30">
+          <p className="text-xs sm:text-sm text-gray-300 mb-2 font-semibold">Controls:</p>
+          <div className="grid grid-cols-2 gap-2 text-xs text-gray-400">
+            <div><span className="text-yellow-400">A/D</span> - Move Player</div>
+            <div><span className="text-yellow-400">W</span> - Jump</div>
+            <div><span className="text-yellow-400">Space</span> - Attack</div>
+            <div><span className="text-yellow-400">Arrow Keys</span> - Opponent</div>
+          </div>
         </div>
       </div>
-      
-      <div id="display-text" style={{ position: 'absolute', color: 'white', alignItems: 'center', justifyContent: 'center', top: 0, right: 0, bottom: 0, left: 0, display: 'none', fontSize: '48px', fontWeight: 'bold' }}></div>
-      
-      <canvas ref={canvasRef}></canvas>
     </div>
   );
 };

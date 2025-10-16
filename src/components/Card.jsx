@@ -57,9 +57,13 @@ const Card = ({ card, onClick, compact = false, selected = false }) => {
         </div>
 
         {/* Card Image */}
-        <div className="aspect-square bg-slate-900 flex items-center justify-center p-2">
+        <div className="aspect-square bg-slate-900 flex items-center justify-center p-2 overflow-hidden">
           {card.image ? (
-            <img src={card.image} alt={card.name} className="w-full h-full object-contain" />
+            <img 
+              src={card.image} 
+              alt={card.name} 
+              className="w-full h-full object-contain"
+            />
           ) : (
             <span className="text-6xl">{typeIcon}</span>
           )}
@@ -110,10 +114,14 @@ const Card = ({ card, onClick, compact = false, selected = false }) => {
         <span className="text-sm font-bold text-white uppercase tracking-wider">{card.rarity}</span>
       </div>
 
-      {/* Card Image */}
-      <div className="aspect-square bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
+      {/* Card Image - IMPROVED SIZING */}
+      <div className="w-full bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-2 min-h-[400px]">
         {card.image ? (
-          <img src={card.image} alt={card.name} className="w-full h-full object-contain" />
+          <img 
+            src={card.image} 
+            alt={card.name} 
+            className="max-w-[95%] max-h-[400px] w-auto h-auto object-contain"
+          />
         ) : (
           <span className="text-9xl">{typeIcon}</span>
         )}

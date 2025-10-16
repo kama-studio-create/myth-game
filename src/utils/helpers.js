@@ -1,8 +1,15 @@
 import { CARD_RARITIES } from './constants';
 
 export const calculateCardPower = (card) => {
-  const baseStats = card.attack + card.defense + card.health + card.magic + card.speed;
-  const rarityMultiplier = CARD_RARITIES[card.rarity].multiplier;
+  const baseStats = (card.attack || 0) + (card.defense || 0) + (card.health || 0) + (card.magic || 0) + (card.speed || 0);
+  const rarityMultipliers = {
+    'Common': 1,
+    'Rare': 1.5,
+    'Epic': 2,
+    'Legendary': 3,
+    'Mythic': 5
+  };
+  const rarityMultiplier = rarityMultipliers[card.rarity] || 1;
   const levelMultiplier = 1 + (card.level * 0.1);
   return Math.floor(baseStats * rarityMultiplier * levelMultiplier);
 };
@@ -25,21 +32,36 @@ export const generateReward = (victory, tournamentLevel = 1) => {
 };
 
 export const generateRandomCard = () => {
-  const types = Object.keys(CARD_RARITIES);
-  const rarity = types[Math.floor(Math.random() * types.length)];
+  const types = ['Warrior', 'Mage', 'Assassin', 'Tank', 'Support'];
+  const rarities = ['Common', 'Rare', 'Epic', 'Legendary'];
+  const type = types[Math.floor(Math.random() * types.length)];
+  const rarity = rarities[Math.floor(Math.random() * rarities.length)];
+  
+  const names = {
+    Warrior: ['Blade Master', 'Knight', 'Berserker', 'Gladiator', 'Samurai'],
+    Mage: ['Archmage', 'Sorcerer', 'Warlock', 'Enchanter', 'Wizard'],
+    Assassin: ['Shadow', 'Rogue', 'Ninja', 'Reaper', 'Phantom'],
+    Tank: ['Guardian', 'Defender', 'Paladin', 'Juggernaut', 'Sentinel'],
+    Support: ['Healer', 'Cleric', 'Druid', 'Mystic', 'Shaman']
+  };
+  
+  const typeNames = names[type];
+  const name = typeNames[Math.floor(Math.random() * typeNames.length)];
   
   return {
     id: `card_${Date.now()}_${Math.random()}`,
-    name: `${rarity} ${['Warrior', 'Mage', 'Tank'][Math.floor(Math.random() * 3)]}`,
-    type: ['WARRIOR', 'MAGE', 'TANK', 'ASSASSIN', 'HEALER'][Math.floor(Math.random() * 5)],
+    name: `${name}`,
+    type,
     rarity,
-    attack: Math.floor(Math.random() * 50) + 50,
-    defense: Math.floor(Math.random() * 50) + 50,
-    health: Math.floor(Math.random() * 50) + 50,
-    magic: Math.floor(Math.random() * 50) + 50,
-    speed: Math.floor(Math.random() * 50) + 50,
+    attack: Math.floor(Math.random() * 50) + 30,
+    defense: Math.floor(Math.random() * 50) + 30,
+    health: Math.floor(Math.random() * 50) + 80,
+    magic: Math.floor(Math.random() * 50) + 30,
+    speed: Math.floor(Math.random() * 50) + 30,
     level: 1,
-    image: ['⚔️', '🔮', '🛡️', '🗡️', '💚'][Math.floor(Math.random() * 5)]
+    ability: 'Basic Attack',
+    // NO image property - will use type icon fallback in Card component
+    image: null
   };
 };
 

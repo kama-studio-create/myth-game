@@ -10,8 +10,9 @@ import MarketplaceScreen from './screens/MarketplaceScreen';
 import ClanScreen from './screens/ClanScreen';
 import TournamentScreen from './screens/TournamentScreen';
 import LeaderboardScreen from './screens/LeaderboardScreen';
-import './styles/globals.css';
 import DesignContest from './components/DesignContest';
+import './styles/globals.css';
+
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useGame();
@@ -81,15 +82,14 @@ function AppRoutes() {
             </ProtectedRoute>
           } 
         />
-
         <Route 
-  path="/design-contest" 
-  element={
-    <ProtectedRoute>
-      <Layout><DesignContest /></Layout>
-    </ProtectedRoute>
-  } 
-/>
+          path="/design-contest" 
+          element={
+            <ProtectedRoute>
+              <Layout><DesignContest /></Layout>
+            </ProtectedRoute>
+          } 
+        />
         <Route 
           path="/clan" 
           element={
