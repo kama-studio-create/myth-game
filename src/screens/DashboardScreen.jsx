@@ -4,13 +4,13 @@ import { useGame } from '../context/GameContext';
 
 const DashboardScreen = () => {
   const navigate = useNavigate();
-  const { user, userCards = [], activeDeck } = useGame();
+  const { user, userCards = [], activeDeck, tokenBalance = 0 } = useGame();
   const [showDailyRewards, setShowDailyRewards] = useState(false);
 
   const quickActions = [
-    { name: 'Battle Arena', icon: '⚔️', path: '/battle', color: 'from-green-600 to-emerald-600', description: 'Fight opponents' },
+    { name: 'Battle Arena', icon: '⚔️', path: '/battle', color: 'from-green-600 to-emerald-600', description: 'Play & Earn Tokens' },
+    { name: 'NFT Marketplace', icon: '🏪', path: '/marketplace', color: 'from-purple-600 to-pink-600', description: 'Trade NFT Cards' },
     { name: 'Deck Builder', icon: '🎴', path: '/deck-builder', color: 'from-blue-600 to-cyan-600', description: 'Build your deck' },
-    { name: 'Marketplace', icon: '🏪', path: '/marketplace', color: 'from-purple-600 to-pink-600', description: 'Buy card packs' },
     { name: 'Clan Hall', icon: '🛡️', path: '/clan', color: 'from-orange-600 to-red-600', description: 'Join a clan' },
     { name: 'Tournaments', icon: '🏆', path: '/tournament', color: 'from-yellow-600 to-amber-600', description: 'Compete for prizes' },
     { name: 'Leaderboard', icon: '📊', path: '/leaderboard', color: 'from-indigo-600 to-purple-600', description: 'View rankings' },
@@ -24,15 +24,22 @@ const DashboardScreen = () => {
           <h1 className="text-4xl font-bold text-white mb-2">
             Welcome back, {user?.username || 'Warrior'}! 👋
           </h1>
-          <p className="text-gray-300">Ready for battle?</p>
+          <p className="text-gray-300">Ready to earn some tokens?</p>
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {/* Stats Overview - Now with Token Balance */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-6 border border-purple-500/30">
             <div className="text-gray-400 text-sm mb-1">Level</div>
             <div className="text-3xl font-bold text-purple-400">{user?.level || 1}</div>
             <div className="text-xs text-gray-500 mt-1">XP: {user?.experience || 0}/500</div>
+          </div>
+          
+          {/* Token Balance - NEW */}
+          <div className="bg-gradient-to-br from-yellow-900/50 to-orange-900/50 backdrop-blur-sm rounded-lg p-6 border-2 border-yellow-500/50">
+            <div className="text-gray-300 text-sm mb-1">Tokens</div>
+            <div className="text-3xl font-bold text-yellow-400">💎 {tokenBalance}</div>
+            <div className="text-xs text-yellow-300 mt-1">Play to Earn</div>
           </div>
           
           <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-6 border border-yellow-500/30">
@@ -54,9 +61,31 @@ const DashboardScreen = () => {
           </div>
           
           <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-6 border border-blue-500/30">
-            <div className="text-gray-400 text-sm mb-1">Rating</div>
-            <div className="text-3xl font-bold text-blue-400">{user?.rating || 1000}</div>
-            <div className="text-xs text-gray-500 mt-1">Rank: {user?.rank || 'Bronze'}</div>
+            <div className="text-gray-400 text-sm mb-1">NFT Cards</div>
+            <div className="text-3xl font-bold text-blue-400">{userCards.length}</div>
+            <div className="text-xs text-gray-500 mt-1">Collection</div>
+          </div>
+        </div>
+
+        {/* Play to Earn Banner */}
+        <div className="mb-8">
+          <div className="bg-gradient-to-r from-green-900/50 to-emerald-900/50 backdrop-blur-sm rounded-lg p-6 border-2 border-green-500/50 shadow-lg hover:shadow-green-500/30 transition-all">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center space-x-4">
+                <div className="text-6xl animate-pulse">💎</div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white mb-1">Play to Earn Tokens!</h3>
+                  <p className="text-green-300">Win battles to earn 50-150 tokens per victory</p>
+                  <p className="text-gray-400 text-sm mt-1">Use tokens to mint NFTs, upgrade cards & trade in marketplace</p>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate('/battle')}
+                className="px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white text-xl font-bold rounded-lg shadow-lg transform hover:scale-105 transition-all"
+              >
+                ⚔️ Start Earning
+              </button>
+            </div>
           </div>
         </div>
 
@@ -135,11 +164,11 @@ const DashboardScreen = () => {
 
         {/* Collection Stats */}
         <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-6 border border-purple-500/30">
-          <h2 className="text-2xl font-bold text-white mb-4">Your Collection</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">Your NFT Collection</h2>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="text-center p-4 bg-slate-900/50 rounded-lg">
               <div className="text-3xl font-bold text-white">{userCards.length || 0}</div>
-              <div className="text-sm text-gray-400">Total Cards</div>
+              <div className="text-sm text-gray-400">Total NFTs</div>
             </div>
             <div className="text-center p-4 bg-slate-900/50 rounded-lg">
               <div className="text-3xl font-bold text-gray-400">

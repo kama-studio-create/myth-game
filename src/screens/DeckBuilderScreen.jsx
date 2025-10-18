@@ -111,7 +111,7 @@ const DeckBuilderScreen = () => {
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-2">
-            Deck Builder
+            🃏 Deck Builder
           </h1>
           <p className="text-gray-300">Create and manage your battle decks!</p>
         </div>
@@ -169,21 +169,23 @@ const DeckBuilderScreen = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
               {(selectedDeck.cards || []).map((card) => (
                 <div key={card.id} className="relative">
                   <Card card={card} compact />
                   <button
                     onClick={() => handleRemoveCardFromDeck(card.id)}
-                    className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold"
+                    className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold shadow-lg z-10 transition-all hover:scale-110"
                   >
                     ×
                   </button>
                 </div>
               ))}
               {(selectedDeck.cards || []).length === 0 && (
-                <div className="col-span-5 text-center py-8 text-gray-400">
-                  No cards in deck. Add cards from your collection below.
+                <div className="col-span-full text-center py-12">
+                  <div className="text-6xl mb-4">🃏</div>
+                  <p className="text-gray-400 text-lg">No cards in deck</p>
+                  <p className="text-gray-500 text-sm mt-2">Add cards from your collection below</p>
                 </div>
               )}
             </div>
@@ -229,18 +231,37 @@ const DeckBuilderScreen = () => {
         {/* Card Collection */}
         <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-6 border border-purple-500/30">
           <h2 className="text-2xl font-bold text-white mb-4">Your Collection ({filteredCards.length} cards)</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {filteredCards.map((card) => (
-              <button
-                key={card.id}
-                onClick={() => handleAddCardToDeck(card)}
-                disabled={!selectedDeck || (selectedDeck.cards || []).find(c => c.id === card.id)}
-                className="disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-transform"
-              >
-                <Card card={card} compact />
-              </button>
-            ))}
-          </div>
+          {filteredCards.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+              {filteredCards.map((card) => {
+                const isInDeck = selectedDeck && (selectedDeck.cards || []).find(c => c.id === card.id);
+                return (
+                  <div 
+                    key={card.id}
+                    className="relative"
+                  >
+                    <div
+                      onClick={() => handleAddCardToDeck(card)}
+                      className={`cursor-pointer ${!selectedDeck || isInDeck ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <Card card={card} compact onClick={!selectedDeck || isInDeck ? null : () => handleAddCardToDeck(card)} />
+                    </div>
+                    {isInDeck && (
+                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-600/90 text-white px-2 py-1 rounded-full text-xs font-bold pointer-events-none">
+                        ✓ In Deck
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">📦</div>
+              <p className="text-gray-400 text-lg">No cards found</p>
+              <p className="text-gray-500 text-sm mt-2">Try adjusting your filters or collect more cards!</p>
+            </div>
+          )}
         </div>
 
         {/* Create Deck Modal */}

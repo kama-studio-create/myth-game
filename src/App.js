@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { GameProvider, useGame } from './context/GameContext';
+import { LanguageProvider } from './context/LanguageContext';
 import Layout from './components/Layout';
 import LoginScreen from './screens/LoginScreen';
 import DashboardScreen from './screens/DashboardScreen';
@@ -11,6 +12,7 @@ import ClanScreen from './screens/ClanScreen';
 import TournamentScreen from './screens/TournamentScreen';
 import LeaderboardScreen from './screens/LeaderboardScreen';
 import DesignContest from './components/DesignContest';
+import NFTMarketplace from './screens/NFTMarketplaceScreen';
 import './styles/globals.css';
 
 // Protected Route Component
@@ -74,14 +76,27 @@ function AppRoutes() {
             </ProtectedRoute>
           } 
         />
+        
+        {/* NFT Marketplace - NEW */}
         <Route 
           path="/marketplace" 
+          element={
+            <ProtectedRoute>
+              <Layout><NFTMarketplace /></Layout>
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Old Marketplace (Optional - keep for card packs) */}
+        <Route 
+          path="/card-packs" 
           element={
             <ProtectedRoute>
               <Layout><MarketplaceScreen /></Layout>
             </ProtectedRoute>
           } 
         />
+        
         <Route 
           path="/design-contest" 
           element={
@@ -123,9 +138,11 @@ function AppRoutes() {
 
 function App() {
   return (
-    <GameProvider>
-      <AppRoutes />
-    </GameProvider>
+    <LanguageProvider>
+      <GameProvider>
+        <AppRoutes />
+      </GameProvider>
+    </LanguageProvider>
   );
 }
 

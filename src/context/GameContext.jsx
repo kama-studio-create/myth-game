@@ -16,6 +16,8 @@ export const GameProvider = ({ children }) => {
   const [userDecks, setUserDecks] = useState([]);
   const [activeDeck, setActiveDeck] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [tokenBalance, setTokenBalance] = useState(0);
+  const [nftCards, setNftCards] = useState([]);
 
   // Initialize user from localStorage on mount
   useEffect(() => {
@@ -28,6 +30,8 @@ export const GameProvider = ({ children }) => {
       // Load user cards and decks
       const storedCards = localStorage.getItem(`cards_${parsedUser.username}`);
       const storedDecks = localStorage.getItem(`decks_${parsedUser.username}`);
+      const storedTokens = localStorage.getItem(`tokens_${parsedUser.username}`);
+      const storedNFTs = localStorage.getItem(`nfts_${parsedUser.username}`);
       
       if (storedCards) {
         setUserCards(JSON.parse(storedCards));
@@ -37,6 +41,12 @@ export const GameProvider = ({ children }) => {
         setUserDecks(decks);
         const active = decks.find(d => d.isActive);
         if (active) setActiveDeck(active);
+      }
+      if (storedTokens) {
+        setTokenBalance(JSON.parse(storedTokens));
+      }
+      if (storedNFTs) {
+        setNftCards(JSON.parse(storedNFTs));
       }
     }
   }, []);
@@ -62,14 +72,26 @@ export const GameProvider = ({ children }) => {
     }
   }, [userDecks, user]);
 
+  // Save tokens to localStorage
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem(`tokens_${user.username}`, JSON.stringify(tokenBalance));
+    }
+  }, [tokenBalance, user]);
+
+  // Save NFTs to localStorage
+  useEffect(() => {
+    if (user && nftCards.length > 0) {
+      localStorage.setItem(`nfts_${user.username}`, JSON.stringify(nftCards));
+    }
+  }, [nftCards, user]);
+
   const register = (username, email, password) => {
-    // Check if user already exists
     const existingUser = localStorage.getItem(`user_${username}`);
     if (existingUser) {
       return { success: false, message: 'Username already exists' };
     }
 
-    // Create new user
     const newUser = {
       id: Date.now(),
       username,
@@ -91,22 +113,21 @@ export const GameProvider = ({ children }) => {
         tournamentsWon: 0,
         totalGoldEarned: 0,
         cardsCollected: 0,
+        tokensEarned: 0,
       },
       clan: null,
       clanRole: 'Member',
     };
 
-    // Save user credentials
     localStorage.setItem(`user_${username}`, JSON.stringify({ username, email, password }));
-
     setUser(newUser);
     setIsAuthenticated(true);
+    setTokenBalance(100); // Starting tokens
     
-    // Generate starter cards
-    const starterCards = generateStarterCards();
+    const starterCards = generateStarterNFTCards();
     setUserCards(starterCards);
+    setNftCards(starterCards);
     
-    // Create starter deck
     const starterDeck = {
       id: Date.now(),
       name: 'Starter Deck',
@@ -124,7 +145,6 @@ export const GameProvider = ({ children }) => {
   };
 
   const login = (username, password) => {
-    // Check if user exists
     const storedUserAuth = localStorage.getItem(`user_${username}`);
     
     if (storedUserAuth) {
@@ -134,7 +154,6 @@ export const GameProvider = ({ children }) => {
       }
     }
 
-    // Get or create user data
     const storedUser = localStorage.getItem('mythicWarriorsUser');
     let userData;
 
@@ -146,7 +165,6 @@ export const GameProvider = ({ children }) => {
     }
 
     if (!userData) {
-      // Create new user data for first-time login
       userData = {
         id: Date.now(),
         username,
@@ -168,6 +186,7 @@ export const GameProvider = ({ children }) => {
           tournamentsWon: 0,
           totalGoldEarned: 0,
           cardsCollected: 0,
+          tokensEarned: 0,
         },
         clan: null,
         clanRole: 'Member',
@@ -177,16 +196,15 @@ export const GameProvider = ({ children }) => {
     setUser(userData);
     setIsAuthenticated(true);
     
-    // Load or generate cards
     const storedCards = localStorage.getItem(`cards_${username}`);
     if (storedCards) {
       setUserCards(JSON.parse(storedCards));
     } else {
-      const starterCards = generateStarterCards();
+      const starterCards = generateStarterNFTCards();
       setUserCards(starterCards);
+      setNftCards(starterCards);
     }
     
-    // Load or create decks
     const storedDecks = localStorage.getItem(`decks_${username}`);
     if (storedDecks) {
       const decks = JSON.parse(storedDecks);
@@ -194,7 +212,7 @@ export const GameProvider = ({ children }) => {
       const active = decks.find(d => d.isActive);
       if (active) setActiveDeck(active);
     } else {
-      const cards = storedCards ? JSON.parse(storedCards) : generateStarterCards();
+      const cards = storedCards ? JSON.parse(storedCards) : generateStarterNFTCards();
       const starterDeck = {
         id: Date.now(),
         name: 'Starter Deck',
@@ -217,10 +235,14 @@ export const GameProvider = ({ children }) => {
     setUserDecks([]);
     setActiveDeck(null);
     setIsAuthenticated(false);
+    setTokenBalance(0);
+    setNftCards([]);
     localStorage.removeItem('mythicWarriorsUser');
     if (user) {
       localStorage.removeItem(`cards_${user.username}`);
       localStorage.removeItem(`decks_${user.username}`);
+      localStorage.removeItem(`tokens_${user.username}`);
+      localStorage.removeItem(`nfts_${user.username}`);
     }
   };
 
@@ -275,12 +297,81 @@ export const GameProvider = ({ children }) => {
     }
   };
 
+  // NFT & Token Economy Functions
+  const earnTokens = (amount) => {
+    setTokenBalance(prev => prev + amount);
+    updateUser({ 
+      gold: (user?.gold || 0) + amount,
+      stats: {
+        ...user?.stats,
+        tokensEarned: (user?.stats?.tokensEarned || 0) + amount
+      }
+    });
+  };
+
+  const mintNFTCard = (cardData) => {
+    const nftCard = {
+      ...cardData,
+      id: Date.now() + Math.random(),
+      nftId: `#${Date.now().toString().slice(-6)}`,
+      mintDate: new Date().toLocaleDateString(),
+      owner: user?.username || 'Player',
+      blockchain: 'Mythic Chain',
+      tokenValue: Math.floor((cardData.attack + cardData.defense + cardData.health) * 0.5),
+    };
+    
+    setUserCards(prev => [...prev, nftCard]);
+    setNftCards(prev => [...prev, nftCard]);
+    
+    return nftCard;
+  };
+
+  const tradeNFTCard = (cardId, toPlayer, price) => {
+    const card = userCards.find(c => c.id === cardId);
+    if (!card || tokenBalance < price) {
+      return { success: false, message: 'Insufficient tokens or card not found' };
+    }
+
+    // Update card owner
+    const updatedCard = { ...card, owner: toPlayer };
+    setUserCards(prev => prev.map(c => c.id === cardId ? updatedCard : c));
+    
+    // Deduct tokens
+    setTokenBalance(prev => prev - price);
+    
+    return { success: true, message: 'Trade successful!' };
+  };
+
+  const upgradeCard = (cardId, cost) => {
+    if (tokenBalance < cost) {
+      return { success: false, message: 'Insufficient tokens' };
+    }
+
+    setUserCards(prev => prev.map(card => {
+      if (card.id === cardId) {
+        return {
+          ...card,
+          level: (card.level || 1) + 1,
+          attack: card.attack + 5,
+          defense: card.defense + 5,
+          health: card.health + 10,
+        };
+      }
+      return card;
+    }));
+
+    setTokenBalance(prev => prev - cost);
+    return { success: true, message: 'Card upgraded!' };
+  };
+
   const value = {
     user,
     userCards,
     userDecks,
     activeDeck,
     isAuthenticated,
+    tokenBalance,
+    nftCards,
     register,
     login,
     logout,
@@ -292,26 +383,27 @@ export const GameProvider = ({ children }) => {
     updateDeck,
     deleteDeck,
     setActiveDeck: setActiveUserDeck,
+    earnTokens,
+    mintNFTCard,
+    tradeNFTCard,
+    upgradeCard,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
 };
 
-// Replace the generateStarterCards function at the bottom of GameContext.jsx
-// with this complete version:
-
-function generateStarterCards() {
+// Helper function to generate starter NFT cards
+function generateStarterNFTCards() {
   const cards = [];
   const types = ['Warrior', 'Mage', 'Assassin', 'Tank', 'Support'];
   const names = {
-    Warrior: ['Achilles', 'Hercules', 'Leonidas', 'Spartacus'],
-    Mage: ['Merlin', 'Gandalf', 'Morgana', 'Circe'],
+    Warrior: ['Achilles', 'Hercules', 'Ares', 'Leonidas'],
+    Mage: ['Zeus', 'Merlin', 'Gandalf', 'Morgana'],
     Assassin: ['Loki', 'Artemis', 'Hermes', 'Shadow'],
-    Tank: ['Atlas', 'Thor', 'Titan', 'Goliath'],
-    Support: ['Athena', 'Freya', 'Iris', 'Hestia']
+    Tank: ['Atlas', 'Thor', 'Odin', 'Titan'],
+    Support: ['Athena', 'Apollo', 'Hera', 'Freya']
   };
 
-  // Predefined cards with custom images
   const predefinedCards = [
     {
       id: Date.now() + 1,
@@ -323,7 +415,11 @@ function generateStarterCards() {
       defense: 60,
       health: 150,
       ability: 'Thunder Strike: Deal massive lightning damage to all enemies',
-      image: '/cards/zeus.png',
+      image: null,
+      nftId: `#${Date.now().toString().slice(-6)}`,
+      mintDate: new Date().toLocaleDateString(),
+      owner: 'You',
+      blockchain: 'Mythic Chain',
     },
     {
       id: Date.now() + 2,
@@ -335,7 +431,11 @@ function generateStarterCards() {
       defense: 80,
       health: 140,
       ability: 'Shield of Wisdom: Increase defense for all allies by 30%',
-      image: '/cards/odin.png',
+      image: null,
+      nftId: `#${(Date.now() + 1).toString().slice(-6)}`,
+      mintDate: new Date().toLocaleDateString(),
+      owner: 'You',
+      blockchain: 'Mythic Chain',
     },
     {
       id: Date.now() + 3,
@@ -347,7 +447,11 @@ function generateStarterCards() {
       defense: 50,
       health: 130,
       ability: 'War Cry: Boost attack power of all allies by 25%',
-      image: '/cards/ares.png',
+      image: null,
+      nftId: `#${(Date.now() + 2).toString().slice(-6)}`,
+      mintDate: new Date().toLocaleDateString(),
+      owner: 'You',
+      blockchain: 'Mythic Chain',
     },
     {
       id: Date.now() + 4,
@@ -359,7 +463,11 @@ function generateStarterCards() {
       defense: 65,
       health: 145,
       ability: 'Tsunami: Flood the battlefield dealing water damage',
-      image: '/cards/poseidon.png',
+      image: null,
+      nftId: `#${(Date.now() + 3).toString().slice(-6)}`,
+      mintDate: new Date().toLocaleDateString(),
+      owner: 'You',
+      blockchain: 'Mythic Chain',
     },
     {
       id: Date.now() + 5,
@@ -371,74 +479,38 @@ function generateStarterCards() {
       defense: 55,
       health: 120,
       ability: 'Titan Strength: Deal double damage for one turn',
-      image: '/cards/cronus.png',
-    },
-    {
-      id: Date.now() + 6,
-      name: 'Apollo',
-      type: 'Support',
-      rarity: 'Epic',
-      level: 4,
-      attack: 60,
-      defense: 80,
-      health: 140,
-      ability: 'Healing Light: Restore health to all allies',
-      image: '/cards/apollo.png',
-    },
-    {
-      id: Date.now() + 7,
-      name: 'Aphrodite',
-      type: 'Support',
-      rarity: 'Epic',
-      level: 4,
-      attack: 55,
-      defense: 70,
-      health: 135,
-      ability: 'Charm: Confuse enemies and reduce their attack',
-      image: '/cards/aphrodite.png',
-    },
-    {
-      id: Date.now() + 8,
-      name: 'Hera',
-      type: 'Support',
-      rarity: 'Epic',
-      level: 4,
-      attack: 65,
-      defense: 75,
-      health: 138,
-      ability: 'Queen\'s Blessing: Protect allies from harm',
-      image: '/cards/hera.png',
+      image: null,
+      nftId: `#${(Date.now() + 4).toString().slice(-6)}`,
+      mintDate: new Date().toLocaleDateString(),
+      owner: 'You',
+      blockchain: 'Mythic Chain',
     },
   ];
 
-  // Add predefined cards
   cards.push(...predefinedCards);
   
-  // Generate 5 more random cards WITHOUT any image URLs
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 8; i++) {
     const type = types[Math.floor(Math.random() * types.length)];
     const typeNames = names[type];
     const name = typeNames[Math.floor(Math.random() * typeNames.length)];
-    const rarities = ['Common', 'Rare'];
-    const rarity = rarities[Math.floor(Math.random() * rarities.length)];
     
     cards.push({
       id: Date.now() + i + 100 + Math.random(),
-      name: name,
+      name: `${name}`,
       type,
-      rarity,
+      rarity: 'Common',
       level: 1,
       attack: 30 + Math.floor(Math.random() * 20),
       defense: 30 + Math.floor(Math.random() * 20),
       health: 100 + Math.floor(Math.random() * 50),
       ability: 'Basic Attack',
-      // NO image property at all - will use icon fallback
+      image: null,
+      nftId: `#${(Date.now() + i + 100).toString().slice(-6)}`,
+      mintDate: new Date().toLocaleDateString(),
+      owner: 'You',
+      blockchain: 'Mythic Chain',
     });
   }
   
   return cards;
 }
-
-
-
-
