@@ -1,0 +1,49 @@
+{
+  "name": "mythic-warriors-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Mythic Warriors - A blockchain-based NFT card battle game",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "lint": "eslint src --fix",
+    "migrate": "node src/scripts/migrate.js",
+    "seed": "node src/scripts/seed.js",
+    "setup": "npm install && npm run migrate && npm run seed"
+  },
+  "keywords": [
+    "nft",
+    "card-game",
+    "blockchain",
+    "gaming",
+    "ethereum"
+  ],
+  "author": "Mythic Warriors Team",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-validator": "^7.0.0",
+    "helmet": "^7.0.0",
+    "jsonwebtoken": "^9.1.0",
+    "mongoose": "^8.0.0",
+    "morgan": "^1.10.0",
+    "web3": "^4.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "eslint": "^8.50.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.1",
+    "supertest": "^6.3.3"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}
